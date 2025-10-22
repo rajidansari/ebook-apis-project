@@ -4,7 +4,7 @@
   "description": "This is an ebook api project.",
   "license": "ISC",
   "author": "",
-  "type": "module.js",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "dev": "node --watch server.ts"
