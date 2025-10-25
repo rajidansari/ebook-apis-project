@@ -2,6 +2,8 @@ import type { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import User from "./userSchema.ts";
 import { hashPassword } from "../utils/hashPassword.ts";
+import jwt from "jsonwebtoken";
+import { config } from "../config/config.ts";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { fullname, email, password } = req.body;
@@ -30,12 +32,20 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
       password: hashedPassword,
     });
 
-    res.status(201).json({ message: "User registered", data: newUser });
-  } catch (error) {
-    console.log(`user register error :: ${error}`);
-  }
+    const accessToken = jwt.sign(
+      { sub: newUser._id },
+      config.jwtSecret as string,
+      {
+        expiresIn: "7d",
+      },
+    );
 
-  res.status(201).json({ message: "User registered" });
+    res
+      .status(201)
+      .json({ message: "User registered successfully", accessToken });
+  } catch (error: any) {
+    return next(createHttpError(500, error.message));
+  }
 };
 
 export { createUser };
