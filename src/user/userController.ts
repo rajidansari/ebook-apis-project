@@ -2,8 +2,6 @@ import type { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
 import User from "./userSchema.ts";
 import { hashPassword } from "../utils/hashPassword.ts";
-import jwt from "jsonwebtoken";
-import { config } from "../config/config.ts";
 import comparePassword from "../utils/comparePassword.ts";
 import generateAccessToken from "../utils/generateAccessToken.ts";
 
@@ -44,4 +42,32 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-export { createUser };
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(createHttpError(400, "All fields are required"));
+  }
+
+  try {
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return next(createHttpError(404, "Invalid email or password"));
+    }
+
+    const isMatch = await comparePassword(password, user.password);
+
+    if (!isMatch) {
+      return next(createHttpError(404, "Invalid email or password"));
+    }
+
+    const accessToken = generateAccessToken(user._id);
+
+    res.status(200).json({ message: "logged in successfully", accessToken });
+  } catch (error: any) {
+    return next(createHttpError(404, error.message));
+  }
+};
+
+export { createUser, loginUser };
