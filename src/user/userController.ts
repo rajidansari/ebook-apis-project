@@ -4,6 +4,8 @@ import User from "./userSchema.ts";
 import { hashPassword } from "../utils/hashPassword.ts";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.ts";
+import comparePassword from "../utils/comparePassword.ts";
+import generateAccessToken from "../utils/generateAccessToken.ts";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const { fullname, email, password } = req.body;
@@ -32,13 +34,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
       password: hashedPassword,
     });
 
-    const accessToken = jwt.sign(
-      { sub: newUser._id },
-      config.jwtSecret as string,
-      {
-        expiresIn: "7d",
-      },
-    );
+    const accessToken = generateAccessToken(newUser._id);
 
     res
       .status(201)
