@@ -37,4 +37,4 @@ const bookSchema = new Schema<Book>(
   { timestamps: true },
 );
 
-export default model("Book", bookSchema);
+export default model<Book>("Book", bookSchema);
