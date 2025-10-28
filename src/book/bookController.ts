@@ -153,7 +153,7 @@ const listAllBooks = async (
   next: NextFunction,
 ) => {
   try {
-    // add pagination
+    // todo: add pagination
     const books = await Book.find().populate("auther");
 
     res.status(200).json({ message: "success", books });
@@ -184,7 +184,6 @@ const listSingleBook = async (
   }
 };
 
-// console.log(`${splittedArr.at(-2)}/${splittedArr.at(-1).split(".")[0]}`)
 const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
   const bookId = req.params.bookId;
   try {

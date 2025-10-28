@@ -1,9 +1,17 @@
 import express from "express";
+import cors from "cors";
 import globalErrorHandler from "./middlewares/globalErrorHandler.ts";
 import userRouter from "./user/userRouter.ts";
 import bookRouter from "./book/bookRouter.ts";
+import { config } from "./config/config.ts";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: config.clientDomain,
+  }),
+);
 
 app.use(express.json());
 
