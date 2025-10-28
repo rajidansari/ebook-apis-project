@@ -1,12 +1,11 @@
 import type { NextFunction, Request, Response } from "express";
 import createHttpError from "http-errors";
-import cloudinary from "../config/cloudinary.ts";
-import path from "node:path";
 import fs from "node:fs/promises";
 import Book from "./bookModel.ts";
 import type { AuthRequest } from "../middlewares/authenticate.ts";
 import coverImageInfo from "../utils/coverImageInfo.ts";
 import bookFileInfo from "../utils/bookFileInfo.ts";
+import cloudinaryFileUploader from "../utils/cloudinaryFileUploader.ts";
 
 const createBook = async (
   req: AuthRequest,
@@ -25,23 +24,20 @@ const createBook = async (
   const { bookFileName, bookFilePath, bookFormat } = bookFileInfo(files);
 
   try {
-    const coverImageUploadResult = await cloudinary.uploader.upload(
+    const coverImageUploadResult = await cloudinaryFileUploader(
       coverImageFilePath,
-      {
-        filename_override: coverImageFileName,
-        folder: "cover-images",
-        format: coverImageMimeTye,
-      },
+      "image",
+      coverImageFileName,
+      "book-cover-images",
+      coverImageMimeTye,
     );
 
-    const bookFileUploadResult = await cloudinary.uploader.upload(
+    const bookFileUploadResult = await cloudinaryFileUploader(
       bookFilePath,
-      {
-        resource_type: "raw",
-        filename_override: bookFileName,
-        folder: "book-pdfs",
-        format: bookFormat,
-      },
+      "raw",
+      bookFileName,
+      "book-pdfs",
+      bookFormat,
     );
 
     // create book in db
