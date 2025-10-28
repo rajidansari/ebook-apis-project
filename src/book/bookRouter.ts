@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   createBook,
+  deleteBook,
   listAllBooks,
   listSingleBook,
   updateBook,
@@ -44,5 +45,8 @@ bookRouter.get("/", listAllBooks);
 
 // get a single book
 bookRouter.get("/:bookId", listSingleBook);
+
+// delete book
+bookRouter.delete("/:bookId", authenticate, deleteBook);
 
 export default bookRouter;

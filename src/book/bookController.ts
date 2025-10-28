@@ -6,6 +6,7 @@ import type { AuthRequest } from "../middlewares/authenticate.ts";
 import coverImageInfo from "../utils/coverImageInfo.ts";
 import bookFileInfo from "../utils/bookFileInfo.ts";
 import cloudinaryFileUploader from "../utils/cloudinaryFileUploader.ts";
+import cloudinary from "../config/cloudinary.ts";
 
 const createBook = async (
   req: AuthRequest,
@@ -97,6 +98,8 @@ const updateBook = async (
         coverImageMimeTye,
       );
 
+      // todo: delete the old cover image on cloudinary
+
       completeCoverImg = coverImgUploadResult.secure_url;
       await fs.unlink(coverImageFilePath);
     }
@@ -114,6 +117,8 @@ const updateBook = async (
         "book-pdfs",
         bookFormat,
       );
+
+      // todo: delete the old book file from cloudinary
 
       completeBookFile = bookFileUploadResult.secure_url;
       await fs.unlink(bookFilePath);
@@ -148,7 +153,6 @@ const listAllBooks = async (
   next: NextFunction,
 ) => {
   try {
-    console.log("entered...");
     // add pagination
     const books = await Book.find();
 
@@ -180,4 +184,47 @@ const listSingleBook = async (
   }
 };
 
-export { createBook, updateBook, listAllBooks, listSingleBook };
+// console.log(`${splittedArr.at(-2)}/${splittedArr.at(-1).split(".")[0]}`)
+const deleteBook = async (req: Request, res: Response, next: NextFunction) => {
+  const bookId = req.params.bookId;
+  try {
+    const book = await Book.findOne({ _id: bookId });
+    if (!book) {
+      return next(createHttpError(404, "Book not found"));
+    }
+
+    // check authorization
+    const _req = req as AuthRequest;
+
+    if (book.auther.toString() !== _req.userId) {
+      return next(
+        createHttpError(403, "You are not authorize to delete this book."),
+      );
+    }
+
+    // cover img cloudinary's publicId
+    const coverImgUrlArray = book.coverImage.split("/");
+    const coverImgPublicId =
+      coverImgUrlArray.at(-2) + "/" + coverImgUrlArray.at(-1)?.split(".")[0];
+
+    // book file cloudinary's publicId
+    const bookFileUrlArray = book.file.split("/");
+    const bookFilePublicId =
+      bookFileUrlArray.at(-2) + "/" + bookFileUrlArray.at(-1);
+
+    // delete coverImage & bookFile from cloudinary
+    await cloudinary.uploader.destroy(coverImgPublicId);
+    await cloudinary.uploader.destroy(bookFilePublicId, {
+      resource_type: "raw",
+    });
+
+    //delete from db
+    await Book.deleteOne({ _id: bookId });
+
+    res.sendStatus(204);
+  } catch (error) {
+    return next(createHttpError(500, "Request timeout, try again."));
+  }
+};
+
+export { createBook, updateBook, listAllBooks, listSingleBook, deleteBook };
