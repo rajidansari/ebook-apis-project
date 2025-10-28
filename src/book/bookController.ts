@@ -154,7 +154,7 @@ const listAllBooks = async (
 ) => {
   try {
     // add pagination
-    const books = await Book.find();
+    const books = await Book.find().populate("auther");
 
     res.status(200).json({ message: "success", books });
   } catch (err) {
@@ -170,7 +170,7 @@ const listSingleBook = async (
   const bookId = req.params.bookId;
 
   try {
-    const book = await Book.findOne({ _id: bookId });
+    const book = await Book.findOne({ _id: bookId }).populate("auther");
 
     if (!book) {
       return next(createHttpError(404, "Book not found"));
