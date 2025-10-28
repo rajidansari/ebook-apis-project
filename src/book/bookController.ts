@@ -61,4 +61,85 @@ const createBook = async (
   }
 };
 
-export { createBook };
+const updateBook = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { title, description, genre } = req.body;
+  const bookId = req.params.bookId;
+
+  const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+  try {
+    const book = await Book.findOne({ _id: bookId });
+
+    if (!book) {
+      return next(createHttpError(404, "Book not found"));
+    }
+
+    if (book?.auther.toString() !== req.userId) {
+      return next(createHttpError(403, "You cannot update ebook info"));
+    }
+
+    let completeCoverImg = "";
+
+    // check if coverImage field is exist.
+    if (files?.coverImage) {
+      const { coverImageFileName, coverImageFilePath, coverImageMimeTye } =
+        coverImageInfo(files);
+
+      const coverImgUploadResult = await cloudinaryFileUploader(
+        coverImageFilePath,
+        "image",
+        coverImageFileName,
+        "book-cover-images",
+        coverImageMimeTye,
+      );
+
+      completeCoverImg = coverImgUploadResult.secure_url;
+      await fs.unlink(coverImageFilePath);
+    }
+
+    // check if bookFile field is exist.
+    let completeBookFile = "";
+
+    if (files?.bookFile) {
+      const { bookFileName, bookFilePath, bookFormat } = bookFileInfo(files);
+
+      const bookFileUploadResult = await cloudinaryFileUploader(
+        bookFilePath,
+        "raw",
+        bookFileName,
+        "book-pdfs",
+        bookFormat,
+      );
+
+      completeBookFile = bookFileUploadResult.secure_url;
+      await fs.unlink(bookFilePath);
+    }
+
+    const updatedBook = await Book.findOneAndUpdate(
+      { _id: bookId },
+      {
+        title,
+        genre,
+        description,
+        coverImage: completeCoverImg ? completeCoverImg : book.coverImage,
+        file: completeBookFile ? completeBookFile : book.file,
+      },
+      { new: true },
+    );
+
+    res.status(200).json({ message: "success", data: updatedBook });
+  } catch (err) {
+    return next(
+      createHttpError(
+        500,
+        "Server can't be able to process your request, try again after a while.",
+      ),
+    );
+  }
+};
+
+export { createBook, updateBook };
