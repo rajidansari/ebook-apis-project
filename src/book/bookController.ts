@@ -6,6 +6,7 @@ import fs from "node:fs/promises";
 import Book from "./bookModel.ts";
 import type { AuthRequest } from "../middlewares/authenticate.ts";
 import coverImageInfo from "../utils/coverImageInfo.ts";
+import bookFileInfo from "../utils/bookFileInfo.ts";
 
 const createBook = async (
   req: AuthRequest,
@@ -21,14 +22,7 @@ const createBook = async (
     coverImageInfo(files);
 
   // bookFile info's
-  const bookFileName = files.bookFile[0].filename;
-  const bookFilePath = path.join(
-    process.cwd(),
-    "public",
-    "data",
-    "uploads",
-    bookFileName,
-  );
+  const { bookFileName, bookFilePath, bookFormat } = bookFileInfo(files);
 
   try {
     const coverImageUploadResult = await cloudinary.uploader.upload(
@@ -46,7 +40,7 @@ const createBook = async (
         resource_type: "raw",
         filename_override: bookFileName,
         folder: "book-pdfs",
-        format: "pdf",
+        format: bookFormat,
       },
     );
 
