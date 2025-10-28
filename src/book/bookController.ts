@@ -142,4 +142,20 @@ const updateBook = async (
   }
 };
 
-export { createBook, updateBook };
+const listAllBooks = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    console.log("entered...");
+    // add pagination
+    const books = await Book.find();
+
+    res.status(200).json({ message: "success", books });
+  } catch (err) {
+    return next(createHttpError(500, "Books fetching failed, try again"));
+  }
+};
+
+export { createBook, updateBook, listAllBooks };
