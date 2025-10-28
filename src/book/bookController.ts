@@ -5,6 +5,7 @@ import path from "node:path";
 import fs from "node:fs/promises";
 import Book from "./bookModel.ts";
 import type { AuthRequest } from "../middlewares/authenticate.ts";
+import coverImageInfo from "../utils/coverImageInfo.ts";
 
 const createBook = async (
   req: AuthRequest,
@@ -16,15 +17,8 @@ const createBook = async (
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
   // coverImage info's
-  const coverImageMimeTye = files.coverImage[0].mimetype.split("/")[1];
-  const coverImageFileName = files.coverImage[0].filename;
-  const coverImageFilePath = path.join(
-    process.cwd(),
-    "public",
-    "data",
-    "uploads",
-    coverImageFileName,
-  );
+  const { coverImageFileName, coverImageFilePath, coverImageMimeTye } =
+    coverImageInfo(files);
 
   // bookFile info's
   const bookFileName = files.bookFile[0].filename;
