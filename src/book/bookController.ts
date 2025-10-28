@@ -4,8 +4,13 @@ import cloudinary from "../config/cloudinary.ts";
 import path from "node:path";
 import fs from "node:fs/promises";
 import Book from "./bookModel.ts";
+import type { AuthRequest } from "../middlewares/authenticate.ts";
 
-const createBook = async (req: Request, res: Response, next: NextFunction) => {
+const createBook = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
   const { title, description, genre } = req.body;
 
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -56,7 +61,7 @@ const createBook = async (req: Request, res: Response, next: NextFunction) => {
       title,
       description,
       genre,
-      auther: "68fe5e03526518734090be67",
+      auther: req.userId,
       coverImage: coverImageUploadResult.secure_url,
       file: bookFileUploadResult.secure_url,
     });
