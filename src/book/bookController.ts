@@ -158,4 +158,26 @@ const listAllBooks = async (
   }
 };
 
-export { createBook, updateBook, listAllBooks };
+const listSingleBook = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  const bookId = req.params.bookId;
+
+  try {
+    const book = await Book.findOne({ _id: bookId });
+
+    if (!book) {
+      return next(createHttpError(404, "Book not found"));
+    }
+
+    res.status(200).json({ message: "success", book });
+  } catch (err) {
+    return next(
+      createHttpError(500, "Not able to fetch this book, try again."),
+    );
+  }
+};
+
+export { createBook, updateBook, listAllBooks, listSingleBook };
