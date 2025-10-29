@@ -8,11 +8,7 @@ import bookFileInfo from "../utils/bookFileInfo.ts";
 import cloudinaryFileUploader from "../utils/cloudinaryFileUploader.ts";
 import cloudinary from "../config/cloudinary.ts";
 
-const createBook = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
+const createBook = async (req: Request, res: Response, next: NextFunction) => {
   const { title, description, genre } = req.body;
 
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -42,11 +38,13 @@ const createBook = async (
     );
 
     // create book in db
+    const _req = req as AuthRequest;
+
     const newBook = await Book.create({
       title,
       description,
       genre,
-      auther: req.userId,
+      auther: _req.userId,
       coverImage: coverImageUploadResult.secure_url,
       file: bookFileUploadResult.secure_url,
     });
@@ -62,11 +60,7 @@ const createBook = async (
   }
 };
 
-const updateBook = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
+const updateBook = async (req: Request, res: Response, next: NextFunction) => {
   const { title, description, genre } = req.body;
   const bookId = req.params.bookId;
 
@@ -79,7 +73,8 @@ const updateBook = async (
       return next(createHttpError(404, "Book not found"));
     }
 
-    if (book?.auther.toString() !== req.userId) {
+    const _req = req as AuthRequest;
+    if (book?.auther.toString() !== _req.userId) {
       return next(createHttpError(403, "You cannot update ebook info"));
     }
 
@@ -101,7 +96,7 @@ const updateBook = async (
       completeCoverImg = coverImgUploadResult.secure_url;
       await fs.unlink(coverImageFilePath);
 
-      // todo: delete the old cover image on cloudinary
+      // delete the old cover image on cloudinary
       const coverImageUrlArray = book.coverImage.split("/");
       const coverImagePublicId =
         coverImageUrlArray.at(-2) +
@@ -128,7 +123,7 @@ const updateBook = async (
       completeBookFile = bookFileUploadResult.secure_url;
       await fs.unlink(bookFilePath);
 
-      // todo: delete the old book file from cloudinary
+      // delete the old book file from cloudinary
       const bookFileUrlArray = book.file.split("/");
       const bookFilePublicId =
         bookFileUrlArray.at(-2) + "/" + bookFileUrlArray.at(-1);
@@ -162,7 +157,7 @@ const updateBook = async (
 };
 
 const listAllBooks = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
@@ -177,7 +172,7 @@ const listAllBooks = async (
 };
 
 const listSingleBook = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) => {
