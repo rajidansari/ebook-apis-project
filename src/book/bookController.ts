@@ -98,10 +98,17 @@ const updateBook = async (
         coverImageMimeTye,
       );
 
-      // todo: delete the old cover image on cloudinary
-
       completeCoverImg = coverImgUploadResult.secure_url;
       await fs.unlink(coverImageFilePath);
+
+      // todo: delete the old cover image on cloudinary
+      const coverImageUrlArray = book.coverImage.split("/");
+      const coverImagePublicId =
+        coverImageUrlArray.at(-2) +
+        "/" +
+        coverImageUrlArray.at(-1)?.split(".")[0];
+
+      await cloudinary.uploader.destroy(coverImagePublicId);
     }
 
     // check if bookFile field is exist.
@@ -118,10 +125,17 @@ const updateBook = async (
         bookFormat,
       );
 
-      // todo: delete the old book file from cloudinary
-
       completeBookFile = bookFileUploadResult.secure_url;
       await fs.unlink(bookFilePath);
+
+      // todo: delete the old book file from cloudinary
+      const bookFileUrlArray = book.file.split("/");
+      const bookFilePublicId =
+        bookFileUrlArray.at(-2) + "/" + bookFileUrlArray.at(-1);
+
+      await cloudinary.uploader.destroy(bookFilePublicId, {
+        resource_type: "raw",
+      });
     }
 
     const updatedBook = await Book.findOneAndUpdate(
